@@ -7,5 +7,5 @@
 #Exclude swap files
 *.swp
 
-#Exclude same private files
-main2.py
+vidaug.egg-info
+.idea/
