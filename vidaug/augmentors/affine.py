@@ -61,7 +61,7 @@ class RandomRotate(object):
 
 class RandomResize(object):
     """
-    Resize video bysoomingin and out.
+    Resize video by zooming in and out.
 
     Args:
         rate (float): Video is scaled uniformly between
