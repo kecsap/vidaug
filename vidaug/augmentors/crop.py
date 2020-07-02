@@ -40,7 +40,8 @@ class CenterCrop(object):
     def __call__(self, clip):
         crop_h, crop_w = self.size
         if isinstance(clip[0], np.ndarray):
-            im_h, im_w, im_c = clip[0].shape
+            im_h = clip[0].shape[0]
+            im_w = clip[0].shape[1]
         elif isinstance(clip[0], PIL.Image.Image):
             im_w, im_h = clip[0].size
         else:
@@ -99,7 +100,8 @@ class CornerCrop(object):
     def __call__(self, clip):
         crop_h, crop_w = self.size
         if isinstance(clip[0], np.ndarray):
-            im_h, im_w, im_c = clip[0].shape
+            im_h = clip[0].shape[0]
+            im_w = clip[0].shape[1]
         elif isinstance(clip[0], PIL.Image.Image):
             im_w, im_h = clip[0].size
         else:
@@ -167,7 +169,8 @@ class RandomCrop(object):
     def __call__(self, clip):
         crop_h, crop_w = self.size
         if isinstance(clip[0], np.ndarray):
-            im_h, im_w, im_c = clip[0].shape
+            im_h = clip[0].shape[0]
+            im_w = clip[0].shape[1]
         elif isinstance(clip[0], PIL.Image.Image):
             im_w, im_h = clip[0].size
         else:

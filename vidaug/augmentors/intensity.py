@@ -42,10 +42,10 @@ class InvertColor(object):
 
 class Add(object):
     """
-    Add a value to all pixel intesities in an video.
+    Add a value to all pixel intensities in an video.
 
     Args:
-        value (int): The value to be added to pixel intesities.
+        value (int): The value to be added to pixel intensities.
     """
 
     def __init__(self, value=0):
@@ -81,14 +81,12 @@ class Multiply(object):
     This augmenter can be used to make images lighter or darker.
 
     Args:
-        value (float): The value with which to multiply the pixel intensities
-        of video.
+        rate (float): A rate in [0,1] with which to multiply the pixel intensities
+        randomly from [1-rate, 1+rate].
     """
 
-    def __init__(self, value=1.0):
-        if value < 0.0:
-            raise TypeError('The video is blacked out since for value < 0.0')
-        self.value = value
+    def __init__(self, rate=0.0):
+        self.rate = rate
 
     def __call__(self, clip):
         is_PIL = isinstance(clip[0], PIL.Image.Image)
@@ -96,9 +94,10 @@ class Multiply(object):
             clip = [np.asarray(img) for img in clip]
 
         data_final = []
+        factor = random.uniform(1 - self.rate, 1 + self.rate)
         for i in range(len(clip)):
             image = clip[i].astype(np.float64)
-            image *= self.value
+            image *= factor
             image = np.where(image > 255, 255, image)
             image = np.where(image < 0, 0, image)
             image = image.astype(np.uint8)
