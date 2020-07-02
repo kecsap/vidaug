@@ -141,7 +141,8 @@ class RandomTranslate(object):
         y_move = random.uniform(-self.y_rate, +self.y_rate)
 
         if isinstance(clip[0], np.ndarray):
-            rows, cols, ch = clip[0].shape
+            rows = clip[0].shape[0]
+            cols = clip[0].shape[1]
             transform_mat = np.float32([[1, 0, x_move * cols], [0, 1, y_move * rows]])
             return [cv2.warpAffine(img, transform_mat, (cols, rows)) for img in clip]
         elif isinstance(clip[0], PIL.Image.Image):
