@@ -17,8 +17,6 @@ List of augmenters:
 import numpy as np
 import numbers
 import random
-import scipy
-from scipy import ndimage
 import PIL
 import cv2
 
@@ -158,27 +156,39 @@ class RandomShear(object):
     Shearing video in X and Y directions.
 
     Args:
-        x (int) : Shear in x direction, selected randomly from
-        [-x, +x].
+        x_rate (float) : Shear rate in x direction [0-1], selected randomly from
+        [0, +x_rate].
 
-        y (int) : Shear in y direction, selected randomly from
-        [-y, +y].
+        y_rate (float) : Shear rate in y direction [0-1], selected randomly from
+        [0, +y_rate].
     """
 
-    def __init__(self, x, y):
-        self.x = x
-        self.y = y
+    def __init__(self, x_rate: float, y_rate: float):
+        self.x_rate = x_rate
+        self.y_rate = y_rate
 
     def __call__(self, clip):
-        x_shear = random.uniform(-self.x, self.x)
-        y_shear = random.uniform(-self.y, self.y)
+        x_shear = random.uniform(0, self.x_rate)
+        y_shear = random.uniform(0, self.y_rate)
 
-        if isinstance(clip[0], np.ndarray):
-            rows, cols, ch = clip[0].shape
-            transform_mat = np.float32([[1, x_shear, 0], [y_shear, 1, 0]])
-            return [cv2.warpAffine(img, transform_mat, (cols, rows)) for img in clip]
-        elif isinstance(clip[0], PIL.Image.Image):
-            return [img.transform(img.size, PIL.Image.AFFINE, (1, x_shear, 0, y_shear, 1, 0)) for img in clip]
+        is_PIL = isinstance(clip[0], PIL.Image.Image)
+        if is_PIL:
+            clip = [np.asarray(img) for img in clip]
+
+        im_h = clip[0].shape[0]
+        im_w = clip[0].shape[1]
+        transform_mat = np.float32([[1, x_shear, 0], [y_shear, 1, 0]])
+        nW = int(clip[0].shape[1] + abs(x_shear*clip[0].shape[0]))
+        nH = int(clip[0].shape[0]+abs(y_shear*clip[0].shape[1]))
+        data_final = []
+        for image in clip:
+            new_image = cv2.warpAffine(image, transform_mat, (nW, nH))
+            top_x = (nW-im_w) // 2
+            top_y = (nH-im_h) // 2
+            cropped_image = new_image[top_y:top_y+im_h, top_x:top_x+im_w]
+            data_final.append(cropped_image)
+
+        if is_PIL:
+            return [PIL.Image.fromarray(img) for img in data_final]
         else:
-            raise TypeError('Expected numpy.ndarray or PIL.Image' +
-                                'but got list of {0}'.format(type(clip[0])))
+            return data_final
