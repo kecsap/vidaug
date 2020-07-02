@@ -122,30 +122,30 @@ class RandomResize(object):
 
 class RandomTranslate(object):
     """
-      Shifting video in X and Y coordinates.
+      Shifting video in X and Y directions.
 
         Args:
-            x (int) : Translate in x direction, selected
-            randomly from [-x, +x] pixels.
+            x_rate (float) : Translate in x direction [0-1], selected
+            randomly from [-x_rate, +x_rate] pixels.
 
-            y (int) : Translate in y direction, selected
-            randomly from [-y, +y] pixels.
+            y_rate (float) : Translate in y direction [0-1], selected
+            randomly from [-y_rate, +y_rate] pixels.
     """
 
-    def __init__(self, x=0, y=0):
-        self.x = x
-        self.y = y
+    def __init__(self, x_rate: float, y_rate: float):
+        self.x_rate = x_rate
+        self.y_rate = y_rate
 
     def __call__(self, clip):
-        x_move = random.randint(-self.x, +self.x)
-        y_move = random.randint(-self.y, +self.y)
+        x_move = random.uniform(-self.x_rate, +self.x_rate)
+        y_move = random.uniform(-self.y_rate, +self.y_rate)
 
         if isinstance(clip[0], np.ndarray):
             rows, cols, ch = clip[0].shape
-            transform_mat = np.float32([[1, 0, x_move], [0, 1, y_move]])
+            transform_mat = np.float32([[1, 0, x_move * cols], [0, 1, y_move * rows]])
             return [cv2.warpAffine(img, transform_mat, (cols, rows)) for img in clip]
         elif isinstance(clip[0], PIL.Image.Image):
-            return [img.transform(img.size, PIL.Image.AFFINE, (1, 0, x_move, 0, 1, y_move)) for img in clip]
+            return [img.transform(img.size, PIL.Image.AFFINE, (1, 0, x_move * img.size[0], 0, 1, y_move * img.size[1])) for img in clip]
         else:
             raise TypeError('Expected numpy.ndarray or PIL.Image' +
                             'but got list of {0}'.format(type(clip[0])))
