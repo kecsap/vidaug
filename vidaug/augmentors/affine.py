@@ -47,15 +47,33 @@ class RandomRotate(object):
 
     def __call__(self, clip):
         angle = random.uniform(self.degrees[0], self.degrees[1])
-        if isinstance(clip[0], np.ndarray):
-            rotated = [ndimage.rotate(img, angle) for img in clip]
-        elif isinstance(clip[0], PIL.Image.Image):
-            rotated = [img.rotate(angle) for img in clip]
-        else:
-            raise TypeError('Expected numpy.ndarray or PIL.Image' +
-                            'but got list of {0}'.format(type(clip[0])))
+        is_PIL = isinstance(clip[0], PIL.Image.Image)
+        if is_PIL:
+            clip = [np.asarray(img) for img in clip]
 
-        return rotated
+        im_h = clip[0].shape[0]
+        im_w = clip[0].shape[1]
+        (cX, cY) = (im_w // 2, im_h // 2)
+        M = cv2.getRotationMatrix2D((cX, cY), angle, 1.0)
+        cos = np.abs(M[0, 0])
+        sin = np.abs(M[0, 1])
+        # compute the new bounding dimensions of the image
+        nW = int((im_h*sin)+(im_w*cos))
+        nH = int((im_h*cos)+(im_w*sin))
+        M[0, 2] += (nW / 2)-cX
+        M[1, 2] += (nH / 2)-cY
+        data_final = []
+        for image in clip:
+            new_image = cv2.warpAffine(image, M, (nW, nH))
+            top_x = (nW-im_w) // 2
+            top_y = (nH-im_h) // 2
+            cropped_image = new_image[top_y:top_y+im_h, top_x:top_x+im_w]
+            data_final.append(cropped_image)
+
+        if is_PIL:
+            return [PIL.Image.fromarray(img) for img in data_final]
+        else:
+            return data_final
 
 
 class RandomResize(object):
