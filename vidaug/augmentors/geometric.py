@@ -247,4 +247,3 @@ class Superpixel(object):
                     image_sp_c[segments == ridx] = mean_intensity
 
         return image_sp
-

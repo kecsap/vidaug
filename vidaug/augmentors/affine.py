@@ -120,6 +120,42 @@ class RandomResize(object):
             return cv2.INTER_CUBIC
 
 
+class FixedResize(object):
+    """
+    Non-random resizing to a fixed size.
+
+    Args:
+        size (tuple): Desired output size in format (h, w).
+    """
+
+    def __init__(self, size):
+        self.width = size[1]
+        self.height = size[0]
+
+    def __call__(self, clip):
+        is_PIL = isinstance(clip[0], PIL.Image.Image)
+        if is_PIL:
+            clip = [np.asarray(img) for img in clip]
+
+        results = []
+        for image in clip:
+            border_v = 0
+            border_h = 0
+            if (self.height / self.width) >= (image.shape[0] / image.shape[1]):
+                border_v = int((((self.height / self.width) * image.shape[1]) - image.shape[0]) / 2)
+            else:
+                border_h = int((((self.width / self.height) * image.shape[0]) - image.shape[1]) / 2)
+
+            new_image = cv2.copyMakeBorder(image, border_v, border_v, border_h, border_h, cv2.BORDER_CONSTANT, 0)
+            new_image = cv2.resize(new_image, (self.width, self.height))
+            results.append(new_image)
+
+        if is_PIL:
+            return [PIL.Image.fromarray(img) for img in results]
+        else:
+            return results
+
+
 class RandomTranslate(object):
     """
       Shifting video in X and Y directions.
