@@ -83,10 +83,13 @@ class Multiply(object):
     Args:
         rate (float): A rate in [0,1] with which to multiply the pixel intensities
         randomly from [1-rate, 1+rate].
+        only_positive_range (bool): Change only in positive direction and modify the
+        sampled range to [1, 1+rate]. It is useful for dark input video.
     """
 
-    def __init__(self, rate=0.0):
+    def __init__(self, rate = 0.0, only_positive_range = False):
         self.rate = rate
+        self.only_positive_range = only_positive_range
 
     def __call__(self, clip):
         is_PIL = isinstance(clip[0], PIL.Image.Image)
@@ -94,7 +97,11 @@ class Multiply(object):
             clip = [np.asarray(img) for img in clip]
 
         data_final = []
-        factor = random.uniform(1 - self.rate, 1 + self.rate)
+        if self.only_positive_range:
+            factor = random.uniform(1, 1 + self.rate)
+        else:
+            factor = random.uniform(1 - self.rate, 1 + self.rate)
+
         for i in range(len(clip)):
             image = clip[i].astype(np.float64)
             image *= factor
